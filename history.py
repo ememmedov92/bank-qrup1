@@ -190,5 +190,6 @@ def show_history(data, username):
         print("-----------------------------------")
 
 if __name__ == "__main__":
-    bank_data = load_data()
-    print("Baza ugurla yuklendi ve json fayli dolduruldu!")
+    print("Faylin yaradilacagi yol:", USERS_FILE)
+    verilenler = load_data()
+    print("Yuklenen melumat:", verilenler)
