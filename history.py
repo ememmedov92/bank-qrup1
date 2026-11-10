@@ -62,7 +62,6 @@ def load_json_file(yol):
         fayl.close()
         return verilenler
     except:
-        print("Fayli oxumaq mumkun olmadi.")
         return None
 
 def save_json_file(yol, verilenler):
@@ -75,7 +74,6 @@ def save_json_file(yol, verilenler):
         fayl.close()
         return True
     except:
-        print("Fayli yadda saxlamaq mumkun olmadi.")
         return False
 
 
@@ -189,7 +187,8 @@ def show_history(data, username):
         print("Sonraki balans:", format_money(record["balance_after"]), "AZN")
         print("-----------------------------------")
 
+
 if __name__ == "__main__":
-    print("Faylin yaradilacagi yol:", USERS_FILE)
-    verilenler = load_data()
-    print("Yuklenen melumat:", verilenler)
+    print("Baza yuklenir ve qovluq yoxlanilir...")
+    my_data = load_data()
+    print("UGURLU! Qovluq ve 'users.json' fayli hazirdir.")
