@@ -188,3 +188,7 @@ def show_history(data, username):
         print("Evvelki balans:", format_money(record["balance_before"]), "AZN")
         print("Sonraki balans:", format_money(record["balance_after"]), "AZN")
         print("-----------------------------------")
+
+if __name__ == "__main__":
+    bank_data = load_data()
+    print("Baza ugurla yuklendi ve json fayli dolduruldu!")
