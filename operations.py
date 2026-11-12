@@ -4,6 +4,10 @@ from decimal import Decimal, InvalidOperation
 
 DAILY_DEPOSIT_LIMIT = Decimal("2000.00")
 
+FREE_WITHDRAW_LIMIT = Decimal("500.00")
+MAX_DAILY_WITHDRAWAL = Decimal("1000.00")
+WITHDRAW_FEE_RATE = Decimal("0.02")
+
 
 def parse_amount(text):
     text = text.strip()
@@ -66,4 +70,10 @@ def deposit(user, atm_cash):
     print(f"Deposit successful. New balance: {Decimal(user['balance']):.2f} AZN")
     print(f"Remaining deposit limit: {remaining_deposit_limit(user):.2f} AZN")
     return atm_cash
+
+
+def calculate_withdraw_fee(withdrawn_today, amount):
+    free_left = max(Decimal("0.00"), FREE_WITHDRAW_LIMIT - withdrawn_today)
+    fee_part = max(Decimal("0.00"), amount - free_left)
+    return (fee_part * WITHDRAW_FEE_RATE).quantize(Decimal("0.01"))
 
