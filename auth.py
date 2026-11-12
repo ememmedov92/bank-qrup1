@@ -3,21 +3,27 @@ import os
 import time
 from datetime import datetime
 
-FILE = "bank_data_v1.json"
+# Faylın saxlanılacağı qovluq və fayl adı
+DATA_DIR = "datalarjsonlar"
+FILE = os.path.join(DATA_DIR, "transfers.json")
 
 default_data = {
     "users": {
         "user01": {"balance": 250000, "password": "Test@123", "accnumb": "100010001",
-                   "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
+                    "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
         "user02": {"balance": 150000, "password": "Test@456", "accnumb": "100010010",
-                   "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
+                    "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
         "user03": {"balance": 300000, "password": "Test@789", "accnumb": "100010011",
-                   "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
+                    "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
     }
 }
 
 
 def save_data(data):
+    # Əgər 'datalarjsonlar' qovluğu yoxdursa, avtomatik yaradır
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
+        
     with open(FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
 
@@ -158,4 +164,5 @@ def main():
             print("Invalid choice.")
 
 
-main()
+if __name__ == "__main__":
+    main()
