@@ -114,3 +114,17 @@ def withdraw(user, atm_cash):
     print(f"New balance: {Decimal(user['balance']):.2f} AZN")
     return atm_cash
 
+def show_daily_limits(user, outgoing_transfers=0):
+    reset_daily_if_new_day(user)
+    deposited = Decimal(user["deposited_today"])
+    withdrawn = Decimal(user["withdrawn_today"])
+    free_left = max(Decimal("0.00"), FREE_WITHDRAW_LIMIT - withdrawn)
+
+    print("DAILY LIMITS")
+    print(f"Deposited today: {deposited:.2f}/{DAILY_DEPOSIT_LIMIT:.2f} AZN")
+    print(f"Remaining deposit: {DAILY_DEPOSIT_LIMIT - deposited:.2f} AZN")
+    print(f"Withdrawn cash: {withdrawn:.2f}/{MAX_DAILY_WITHDRAWAL:.2f} AZN")
+    print(f"Remaining withdrawal: {MAX_DAILY_WITHDRAWAL - withdrawn:.2f} AZN")
+    print(f"Remaining fee-free cash: {free_left:.2f} AZN")
+    print(f"Outgoing transfers: {outgoing_transfers}/5")
+
