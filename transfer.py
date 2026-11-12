@@ -1,6 +1,11 @@
 import history
+from datetime import datetime
 
 MAX_TRANSFERS_PER_DAY = 5
+
+
+def get_current_date():
+    return datetime.now().strftime("%Y-%m-%d")
 
 
 def find_username_by_account(data, account_number):
@@ -12,10 +17,15 @@ def find_username_by_account(data, account_number):
 
 
 def reset_transfer_counter_if_new_day(user):
-    today = history.today_string()
+    today = get_current_date()
+    if "transfer_date" not in user:
+        user["transfer_date"] = today
+    if "daily_transfer_count" not in user:
+        user["daily_transfer_count"] = 0
+
     if user["transfer_date"] != today:
         user["transfer_date"] = today
-        user["transfer_count"] = 0
+        user["daily_transfer_count"] = 0
 
 
 def ask_yes_no(question):
@@ -32,7 +42,8 @@ def transfer_money(data, sender_username):
     sender = data["users"][sender_username]
 
     reset_transfer_counter_if_new_day(sender)
-    if sender["transfer_count"] >= MAX_TRANSFERS_PER_DAY:
+    
+    if sender["daily_transfer_count"] >= MAX_TRANSFERS_PER_DAY:
         print("Kocurme alinmadi: Bu gun artiq", MAX_TRANSFERS_PER_DAY, "defe kocurme etmisiniz.")
         return
 
@@ -56,23 +67,23 @@ def transfer_money(data, sender_username):
     receiver_balance = receiver["balance"]
 
     if amount > sender_balance:
-        print("Xeta: Balansda kifayet qeder pul yoxdur. Sizin balansiniz:", history.money(sender_balance), "AZN.")
+        print(f"Xeta: Balansda kifayet qeder pul yoxdur. Sizin balansiniz: {sender_balance:.2f} AZN.")
         return
 
     print("Gonderen:", sender_username)
     print("Alan hesab:", receiver_account)
-    print("Mebleg:", history.money(amount), "AZN")
+    print(f"Mebleg: {amount:.2f} AZN")
     
     if not ask_yes_no("Kocurmeni tesdiqleyirsiniz? (Y/N): "):
         print("Kocurme legv edildi.")
         return
 
-    old_count = sender["transfer_count"]
-    old_number = data["last_transaction_number"]
+    old_count = sender["daily_transfer_count"]
+    old_number = data.get("last_transaction_number", None)
 
     sender["balance"] = sender_balance - amount
     receiver["balance"] = receiver_balance + amount
-    sender["transfer_count"] = old_count + 1
+    sender["daily_transfer_count"] = old_count + 1
 
     history.add_history_record(data, sender_username, "Kocurme Gonderildi", -amount,
                                 sender_balance, sender["balance"], 0, receiver["account_number"])
@@ -82,18 +93,26 @@ def transfer_money(data, sender_username):
     if not history.save_data(data):
         sender["balance"] = sender_balance
         receiver["balance"] = receiver_balance
-        sender["transfer_count"] = old_count
-        sender["history"].pop()
-        receiver["history"].pop()
-        data["last_transaction_number"] = old_number
+        sender["daily_transfer_count"] = old_count
+        if "history" in sender and sender["history"]:
+            sender["history"].pop()
+        if "history" in receiver and receiver["history"]:
+            receiver["history"].pop()
+        if old_number is not None:
+            data["last_transaction_number"] = old_number
         print("Xeta: Melumat yadda saxlanilmadi, kocurme legv olundu.")
         return
 
     print("Kocurme uqurla tamamlandi!")
-    print("Yeni balansiniz:", history.money(sender["balance"]), "AZN")
+    print(f"Yeni balansiniz: {sender['balance']:.2f} AZN")
 
 
 if __name__ == "__main__":
     all_data = history.load_data()
+    print(f"Testdən əvvəl balans: {all_data['users']['user01']['balance']} AZN")
+    
     transfer_money(all_data, "user01")
-    history.show_history(all_data, "user01")
+    
+    print("\n--- Əməliyyatdan sonra son vəziyyət ---")
+    print(f"Testdən sonra balans: {all_data['users']['user01']['balance']} AZN")
+    
