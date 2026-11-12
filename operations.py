@@ -25,3 +25,14 @@ def reset_daily_if_new_day(user):
         user["deposited_today"] = "0.00"
         user["withdrawn_today"] = "0.00"
         user["limits_date"] = today
+
+def show_account_info(user):
+    status = "Blocked" if user.get("blocked", False) else "Active"
+    print(f"Account holder: {user['username']}")
+    print(f"Account number: {user['account_number']}")
+    print(f"Available balance: {Decimal(user['balance']):.2f} AZN")
+    print(f"Account status: {status}")
+
+
+def show_balance(user):
+    print(f"Available balance: {Decimal(user['balance']):.2f} AZN")
