@@ -36,3 +36,34 @@ def show_account_info(user):
 
 def show_balance(user):
     print(f"Available balance: {Decimal(user['balance']):.2f} AZN")
+
+
+def remaining_deposit_limit(user):
+    reset_daily_if_new_day(user)
+    used_today = Decimal(user["deposited_today"])
+    return DAILY_DEPOSIT_LIMIT - used_today
+
+
+def apply_deposit(user, amount, atm_cash):
+    user["balance"] = str(Decimal(user["balance"]) + amount)
+    user["deposited_today"] = str(Decimal(user["deposited_today"]) + amount)
+    return atm_cash + amount
+
+
+def deposit(user, atm_cash):
+    text = input("Enter the amount to deposit: ")
+    amount = parse_amount(text)
+    if amount is None:
+        print("Error: the amount must be positive with at most 2 decimal places.")
+        return atm_cash
+
+    remaining = remaining_deposit_limit(user)
+    if amount > remaining:
+        print(f"Deposit rejected: daily limit would be exceeded. Remaining limit: {remaining:.2f} AZN")
+        return atm_cash
+
+    atm_cash = apply_deposit(user, amount, atm_cash)
+    print(f"Deposit successful. New balance: {Decimal(user['balance']):.2f} AZN")
+    print(f"Remaining deposit limit: {remaining_deposit_limit(user):.2f} AZN")
+    return atm_cash
+
