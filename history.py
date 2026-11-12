@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 
 BASE_FOLDER = os.path.dirname(os.path.abspath(__file__))
-DATA_FOLDER = os.path.join(BASE_FOLDER, "")
+DATA_FOLDER = os.path.join(BASE_FOLDER, "datalarjsonlar")
 USERS_FILE = os.path.join(DATA_FOLDER, "users.json")
 
 
