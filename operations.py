@@ -77,3 +77,40 @@ def calculate_withdraw_fee(withdrawn_today, amount):
     fee_part = max(Decimal("0.00"), amount - free_left)
     return (fee_part * WITHDRAW_FEE_RATE).quantize(Decimal("0.01"))
 
+def remaining_withdraw_limit(user):
+    reset_daily_if_new_day(user)
+    return MAX_DAILY_WITHDRAWAL - Decimal(user["withdrawn_today"])
+
+
+def apply_withdrawal(user, amount, fee, atm_cash):
+    user["balance"] = str(Decimal(user["balance"]) - amount - fee)
+    user["withdrawn_today"] = str(Decimal(user["withdrawn_today"]) + amount)
+    return atm_cash - amount
+
+
+def withdraw(user, atm_cash):
+    text = input("Enter the amount to withdraw: ")
+    amount = parse_amount(text)
+    if amount is None:
+        print("Error: the amount must be positive with at most 2 decimal places.")
+        return atm_cash
+
+    remaining = remaining_withdraw_limit(user)
+    if amount > remaining:
+        print(f"Withdrawal rejected: daily limit exceeded. Remaining limit: {remaining:.2f} AZN")
+        return atm_cash
+
+    fee = calculate_withdraw_fee(Decimal(user["withdrawn_today"]), amount)
+    if Decimal(user["balance"]) < amount + fee:
+        print("Withdrawal rejected: insufficient balance (fee included).")
+        return atm_cash
+
+    if atm_cash < amount:
+        print("Withdrawal rejected: not enough cash in the ATM.")
+        return atm_cash
+
+    atm_cash = apply_withdrawal(user, amount, fee, atm_cash)
+    print(f"Withdrawal successful. Cash dispensed: {amount:.2f} AZN, fee: {fee:.2f} AZN")
+    print(f"New balance: {Decimal(user['balance']):.2f} AZN")
+    return atm_cash
+
