@@ -44,31 +44,55 @@ Member A's module is the entry point of the system. A user can use deposit, with
 - How the 60-second wait is calculated and saved.
 - How the password change is validated.
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Read.me file
-What is there now
-In the README written so far:
-• There is a place for all three names,  Roya Tagizade Tahirli Cavidan and Memmedov Eli are  royatagizade07 emmemmedov92 MrCeyvd
-• Member B A and C's section is fully written (deposit, withdrawal, fee, limits).
+### Member B — Core Transactions, Limits & ATM Cash Management (`@royatagizade07`)
 
-What the specification requires
+This module is responsible for processing all financial transactions while enforcing account balances, transaction fees, daily withdrawal limits, and physical ATM cash constraints.
 
-Who
-What they write
-Member B 
-The "Member B section" withdrawals and deposits checking daily limits and ATM cash
- 
+#### Key Features & Logic
+* **Deposit Handling:**
+  * Accepts valid positive deposit amounts (rejecting zero or negative inputs).
+  * Immediately updates the user's account balance and adds the deposited cash to the ATM's total available cash reserve.
+* **Withdrawal Processing & Fees:**
+  * Validates that the requested amount is positive and meets minimum/multiple denomination rules.
+  * Calculates applicable transaction fees (`fee`) and verifies that `withdrawal_amount + fee <= user_balance` before approving the transaction.
+  * Deducts the total amount (withdrawal + fee) from the user's account and reduces the ATM's physical cash pool by the dispensed amount.
+* **Daily Withdrawal Limits:**
+  * Tracks each user's cumulative withdrawals within a 24-hour / daily cycle.
+  * Blocks transactions if `daily_withdrawn + withdrawal_amount > daily_limit`, displaying the remaining daily allowance to the user.
+* **ATM Cash Reserve Check:**
+  * Verifies physical cash availability inside the ATM (`withdrawal_amount <= atm_cash`) prior to dispensing funds.
+  * Prevents partial or failed dispenses by alerting the user if the ATM lacks sufficient cash, without altering their account balance.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------## Member C: Transfers, Transaction History and File Storage
+**Author:** Memmedov Eli (emmemmedov92)
+**Main modules:** `transfer.py`, `history.py`, `datalarjsonlar/`
 
+### What this part does
+Member C's module handles moving money between accounts, recording every operation, and saving all data to files. It works only after the user has logged in through `auth.py`.
 
+### 1. Transfers
+- The logged-in user enters the receiver's account number and the amount.
+- The program checks that the receiver account exists and is not the same as the sender.
+- The amount must be positive and not greater than the sender's balance.
+- If all checks pass, the amount is subtracted from the sender and added to the receiver.
+- If any check fails, an error message is shown and no balance is changed.
 
+### 2. Transaction history
+- Every operation (deposit, withdrawal, transfer sent, transfer received) is recorded with its type, amount, date and time.
+- The user can view the history of their own account only.
+- Transactions are shown in order, so the user can see what happened and when.
 
+### 3. File storage
+- All account data (balances, passwords, block status) and history are saved in JSON files in the `datalarjsonlar/` folder (main file: `bank_data_v1.json`).
+- Data is saved after every successful operation, so nothing is lost when the program is closed.
+- When the program starts, the data is loaded from the file again.
 
-All together
-Shared sections: how to run, default accounts, Git flow, tests
-Avoiding conflicts
-If all three of you edit the same file at the same time, Git can produce a conflict. To prevent this:
-1.  One person (for example the repo owner) puts the main version of the README into the repository.
-2.  After that, everyone writes only their own section.
-3.  Everyone makes a separate commit. This shows each of your contributions to the README.
-4.  Do not touch each other's sections.
-Message to your teammates
-"We are writing the README together. I have prepared the Member B section. everyone write its own section
+### Integration with other modules
+- **Member A (authentication):** the account number of the logged-in user from `auth.py` is used as the sender of a transfer and to select whose history is shown.
+- **Member B (ATM operations):** deposits and withdrawals made in `operations.py` are written to the history and saved to the same data file.
+- All modules read and write the same data file (`bank_data_v1.json`), so changes are shared.
+
+### What I can explain in the defense
+- How a transfer is validated and how both balances are updated.
+- How each operation is recorded in the history.
+- How data is saved to and loaded from the JSON file.
+- How my module is connected to login (Member A) and ATM operations (Member B).
