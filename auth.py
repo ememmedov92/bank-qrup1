@@ -5,15 +5,37 @@ from datetime import datetime
 
 FILE = "bank_data_v1.json"
 
-default_data = {
-    "users": {
-        "user01": {"balance": 250000, "password": "Test@123", "accnumb": "100010001",
-                   "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
-        "user02": {"balance": 150000, "password": "Test@456", "accnumb": "100010010",
-                   "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
-        "user03": {"balance": 300000, "password": "Test@789", "accnumb": "100010011",
-                   "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
+today = datetime.now().strftime("%Y-%m-%d")
+
+
+def new_user(account_number, password, balance):
+    return {
+        "account_number": account_number,
+        "password": password,
+        "balance": balance,
+        "is_blocked": False,
+        "failed_attempts": 0,
+        "lockout_until": None,
+        "deposit_date": today,
+        "deposit_total": 0.0,
+        "withdraw_date": today,
+        "withdraw_total": 0.0,
+        "transfer_date": today,
+        "daily_transfer_count": 0,
+        "last_login": None,
+        "last_transaction_time": None,
+        "history": [],
     }
+
+
+default_data = {
+    "atm_cash": 5000.0,
+    "last_transaction_number": 0,
+    "users": {
+        "user01": new_user("10010001", "Test@123", 2500.0),
+        "user02": new_user("10010002", "Test@456", 1500.0),
+        "user03": new_user("10010003", "Test@789", 3000.0),
+    },
 }
 
 
@@ -27,7 +49,7 @@ def load_data():
         try:
             with open(FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            if "users" in data:
+            if "users" in data and "atm_cash" in data and "last_transaction_number" in data:
                 return data
             print("Data file is invalid. Default data will be created.")
         except (json.JSONDecodeError, OSError):
@@ -35,11 +57,13 @@ def load_data():
     save_data(default_data)
     return default_data
 
-def countdown(san):
-    while san > 0:
-        san -= 1
-        print(f"Please wait: 00:{san:02d}")
+
+def countdown(seconds):
+    while seconds > 0:
+        seconds -= 1
+        print(f"Please wait: 00:{seconds:02d}")
         time.sleep(1)
+
 
 def login(data):
     name = input("Input name: ").strip()
@@ -50,23 +74,23 @@ def login(data):
 
     user = data["users"][name]
 
-    if user["userstatus"] == "blocked":
+    if user["is_blocked"]:
         print("Access denied. Your account is blocked.")
         return None
 
-    if user["lockout_until"] > time.time():
-        qalan = int(user["lockout_until"] - time.time()) + 1
+    if user["lockout_until"] is not None and user["lockout_until"] > time.time():
+        remaining = int(user["lockout_until"] - time.time()) + 1
         print("Too many failed login attempts.")
-        countdown(qalan)
+        countdown(remaining)
         print("You may try again.")
 
-    while user["attemptcount"] < 6:
+    while user["failed_attempts"] < 6:
         password = input("Input your password: ")
 
         if password == user["password"]:
             print("Correct password")
-            user["attemptcount"] = 0
-            user["lockout_until"] = 0
+            user["failed_attempts"] = 0
+            user["lockout_until"] = None
             if user["last_login"]:
                 print("Last login:", user["last_login"])
             user["last_login"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -74,21 +98,21 @@ def login(data):
             print("Successfully logged in")
             return name
 
-        user["attemptcount"] += 1
-        print(f"Incorrect password. Attempt: {user['attemptcount']}/6\n")
+        user["failed_attempts"] += 1
+        print(f"Incorrect password. Attempt: {user['failed_attempts']}/6\n")
 
-        if user["attemptcount"] == 3:
+        if user["failed_attempts"] == 3:
             print("Too many failed login attempts.")
             user["lockout_until"] = time.time() + 60
-            save_data(data) 
+            save_data(data)
             countdown(60)
             print("You may try again.")
 
-        elif user["attemptcount"] == 6:
+        elif user["failed_attempts"] == 6:
             print("Maximum login attempts exceeded.")
             print("Your card has been blocked.")
             print("Please contact the bank administrator.")
-            user["userstatus"] = "blocked"
+            user["is_blocked"] = True
 
         save_data(data)
 
@@ -110,6 +134,7 @@ def password_ok(new_password):
         elif ch.isdigit():
             has_digit = True
     return has_upper and has_lower and has_digit
+
 
 def change_password(data, name):
     user = data["users"][name]
