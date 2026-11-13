@@ -3,33 +3,26 @@ import os
 import time
 from datetime import datetime
 
-# Faylın saxlanılacağı qovluq və fayl adı
-DATA_DIR = "datalarjsonlar"
-FILE = os.path.join(DATA_DIR, "transfers.json")
+FILE = "bank_data_v1.json"
 
 default_data = {
     "users": {
         "user01": {"balance": 250000, "password": "Test@123", "accnumb": "100010001",
-                    "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
+                   "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
         "user02": {"balance": 150000, "password": "Test@456", "accnumb": "100010010",
-                    "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
+                   "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
         "user03": {"balance": 300000, "password": "Test@789", "accnumb": "100010011",
-                    "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
+                   "userstatus": "active", "attemptcount": 0, "lockout_until": 0, "last_login": ""},
     }
 }
 
 
 def save_data(data):
-    # Əgər 'datalarjsonlar' qovluğu yoxdursa, avtomatik yaradır
-    if not os.path.exists(DATA_DIR):
-        os.makedirs(DATA_DIR)
-        
     with open(FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
 
 
 def load_data():
-    """Fayl yoxdursa və ya xarabdırsa default data yaradır."""
     if os.path.exists(FILE):
         try:
             with open(FILE, "r", encoding="utf-8") as f:
@@ -104,7 +97,6 @@ def login(data):
 
 
 def password_ok(new_password):
-    """Ən azı 8 simvol, 1 böyük hərf, 1 kiçik hərf, 1 rəqəm."""
     if len(new_password) < 8:
         return False
     has_upper = False
@@ -164,5 +156,4 @@ def main():
             print("Invalid choice.")
 
 
-if __name__ == "__main__":
-    main()
+main()
