@@ -1,12 +1,18 @@
+from decimal import Decimal, InvalidOperation
 from datetime import date
 
-from decimal import Decimal, InvalidOperation
-
 DAILY_DEPOSIT_LIMIT = Decimal("2000.00")
-
 FREE_WITHDRAW_LIMIT = Decimal("500.00")
 MAX_DAILY_WITHDRAWAL = Decimal("1000.00")
 WITHDRAW_FEE_RATE = Decimal("0.02")
+
+
+def to_decimal(value):
+    return Decimal(str(value))
+
+
+def to_storage(value):
+    return float(value)
 
 
 def parse_amount(text):
@@ -23,38 +29,42 @@ def parse_amount(text):
         return None
     return amount
 
+
 def reset_daily_if_new_day(user):
     today = date.today().isoformat()
-    if user.get("limits_date") != today:
-        user["deposited_today"] = "0.00"
-        user["withdrawn_today"] = "0.00"
-        user["limits_date"] = today
+    if user.get("deposit_date") != today:
+        user["deposit_total"] = 0.0
+        user["deposit_date"] = today
+    if user.get("withdraw_date") != today:
+        user["withdraw_total"] = 0.0
+        user["withdraw_date"] = today
 
-def show_account_info(user):
-    status = "Blocked" if user.get("blocked", False) else "Active"
-    print(f"Account holder: {user['username']}")
-    print(f"Account number: {user['account_number']}")
-    print(f"Available balance: {Decimal(user['balance']):.2f} AZN")
-    print(f"Account status: {status}")
+
+def show_account_info(username, user):
+    status = "Blocked" if user.get("is_blocked", False) else "Active"
+    print(f"Account Holder: {username}")
+    print(f"Account Number: {user['account_number']}")
+    print(f"Current Balance: {to_decimal(user['balance']):.2f} AZN")
+    print(f"Account Status: {status}")
 
 
 def show_balance(user):
-    print(f"Available balance: {Decimal(user['balance']):.2f} AZN")
+    print(f"Current Balance: {to_decimal(user['balance']):.2f} AZN")
 
 
 def remaining_deposit_limit(user):
     reset_daily_if_new_day(user)
-    used_today = Decimal(user["deposited_today"])
-    return DAILY_DEPOSIT_LIMIT - used_today
+    return DAILY_DEPOSIT_LIMIT - to_decimal(user["deposit_total"])
 
 
 def apply_deposit(user, amount, atm_cash):
-    user["balance"] = str(Decimal(user["balance"]) + amount)
-    user["deposited_today"] = str(Decimal(user["deposited_today"]) + amount)
-    return atm_cash + amount
+    user["balance"] = to_storage(to_decimal(user["balance"]) + amount)
+    user["deposit_total"] = to_storage(to_decimal(user["deposit_total"]) + amount)
+    return to_decimal(atm_cash) + amount
 
 
 def deposit(user, atm_cash):
+    atm_cash = to_decimal(atm_cash)
     text = input("Enter the amount to deposit: ")
     amount = parse_amount(text)
     if amount is None:
@@ -67,7 +77,7 @@ def deposit(user, atm_cash):
         return atm_cash
 
     atm_cash = apply_deposit(user, amount, atm_cash)
-    print(f"Deposit successful. New balance: {Decimal(user['balance']):.2f} AZN")
+    print(f"Deposit successful. New balance: {to_decimal(user['balance']):.2f} AZN")
     print(f"Remaining deposit limit: {remaining_deposit_limit(user):.2f} AZN")
     return atm_cash
 
@@ -77,18 +87,20 @@ def calculate_withdraw_fee(withdrawn_today, amount):
     fee_part = max(Decimal("0.00"), amount - free_left)
     return (fee_part * WITHDRAW_FEE_RATE).quantize(Decimal("0.01"))
 
+
 def remaining_withdraw_limit(user):
     reset_daily_if_new_day(user)
-    return MAX_DAILY_WITHDRAWAL - Decimal(user["withdrawn_today"])
+    return MAX_DAILY_WITHDRAWAL - to_decimal(user["withdraw_total"])
 
 
 def apply_withdrawal(user, amount, fee, atm_cash):
-    user["balance"] = str(Decimal(user["balance"]) - amount - fee)
-    user["withdrawn_today"] = str(Decimal(user["withdrawn_today"]) + amount)
-    return atm_cash - amount
+    user["balance"] = to_storage(to_decimal(user["balance"]) - amount - fee)
+    user["withdraw_total"] = to_storage(to_decimal(user["withdraw_total"]) + amount)
+    return to_decimal(atm_cash) - amount
 
 
 def withdraw(user, atm_cash):
+    atm_cash = to_decimal(atm_cash)
     text = input("Enter the amount to withdraw: ")
     amount = parse_amount(text)
     if amount is None:
@@ -100,8 +112,8 @@ def withdraw(user, atm_cash):
         print(f"Withdrawal rejected: daily limit exceeded. Remaining limit: {remaining:.2f} AZN")
         return atm_cash
 
-    fee = calculate_withdraw_fee(Decimal(user["withdrawn_today"]), amount)
-    if Decimal(user["balance"]) < amount + fee:
+    fee = calculate_withdraw_fee(to_decimal(user["withdraw_total"]), amount)
+    if to_decimal(user["balance"]) < amount + fee:
         print("Withdrawal rejected: insufficient balance (fee included).")
         return atm_cash
 
@@ -111,13 +123,14 @@ def withdraw(user, atm_cash):
 
     atm_cash = apply_withdrawal(user, amount, fee, atm_cash)
     print(f"Withdrawal successful. Cash dispensed: {amount:.2f} AZN, fee: {fee:.2f} AZN")
-    print(f"New balance: {Decimal(user['balance']):.2f} AZN")
+    print(f"New balance: {to_decimal(user['balance']):.2f} AZN")
     return atm_cash
+
 
 def show_daily_limits(user, outgoing_transfers=0):
     reset_daily_if_new_day(user)
-    deposited = Decimal(user["deposited_today"])
-    withdrawn = Decimal(user["withdrawn_today"])
+    deposited = to_decimal(user["deposit_total"])
+    withdrawn = to_decimal(user["withdraw_total"])
     free_left = max(Decimal("0.00"), FREE_WITHDRAW_LIMIT - withdrawn)
 
     print("DAILY LIMITS")
