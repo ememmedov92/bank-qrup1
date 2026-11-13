@@ -1,98 +1,130 @@
-CAVIDAN a
-ROYA b
-MEMMEDOV ELI c
--------------------------------------------------------------------------------------------------------------------------------------------------------------------
-## Member A: Login, Blocking, Waiting Time and Password Change
-**Author:** Tahirli Cavidan (MrCeyvd)
-**Main module:** `auth.py`
+# 577E-Python-Banking-System
 
-### What this part does
-Member A's module is the entry point of the system. A user can use deposit, withdrawal, transfers or history only after passing through this module.
+Console-based banking/ATM simulation in Python. Users log in, deposit, withdraw, transfer money and view history. All data is stored in JSON, so nothing is lost when the program closes.
 
-### 1. Login
-- The user enters the account number and password.
-- The program checks them against the accounts stored in the JSON file.
-- If both are correct, the user is logged in and gets access to the main menu.
-- If the account number does not exist or the password is wrong, an error message is shown.
+## Run
 
-### 2. Account blocking
-- Every wrong password attempt is counted.
-- After 3 failed attempts, the account is temporarily blocked.
-- A blocked account cannot log in, even with the correct password, until the block ends.
-- The counter is reset after a successful login.
+Requires **Python 3.10+** (standard library only).
 
-### 3. 60-second wait
-- A blocked user must wait 60 seconds.
-- The block time is saved with the account data, so restarting the program does not remove the block.
-- After 60 seconds the account is unblocked automatically.
-- While waiting, the program shows the remaining seconds.
+```bash
+git clone https://github.com/<user>/577E-Python-Banking-System.git
+cd 577E-Python-Banking-System
+python main.py
+```
 
-### 4. Password change
-- Only a logged-in user can change the password.
-- The user enters the current password, then the new password (and confirms it).
-- If the current password is wrong or the confirmation does not match, nothing is changed.
-- The new password is saved to the JSON file.
+Tests: `python -m unittest tests_operations -v`
 
-### Integration with other modules
-- **Member B (ATM operations):** deposit, withdrawal, fee and limits are available only after a successful login.
-- **Member C (transfers, history, storage):** uses the logged-in account number from `auth.py` to identify the sender and whose history to show.
-- All modules use the same data file (`bank_data_v1.json`).
+## Demo Accounts
 
-### What I can explain in the defense
-- How the login check works and where the data comes from.
-- How failed attempts are counted and when an account is blocked.
-- How the 60-second wait is calculated and saved.
-- How the password change is validated.
--------------------------------------------------------------------------------------------------------------------------------------------------------------------
-### Member B — Core Transactions, Limits & ATM Cash Management (`@royatagizade07`)
+| User | Account number | Password | Balance (AZN) |
+|------|----------------|----------|---------------|
+| `user01` | `10010001` | `Test@123` | 2150.00     |
+| `user02` | `10010002` | `Test@456` | 1850.00     |
+| `user03` | `10010003` | `Test@789` | 3000.00     |
 
-This module is responsible for processing all financial transactions while enforcing account balances, transaction fees, daily withdrawal limits, and physical ATM cash constraints.
+ATM starting cash: **5000.00 AZN**. Use `10010001` -> `10010002` for transfer demos; `user03` has an empty history.
 
-#### Key Features & Logic
-* **Deposit Handling:**
-  * Accepts valid positive deposit amounts (rejecting zero or negative inputs).
-  * Immediately updates the user's account balance and adds the deposited cash to the ATM's total available cash reserve.
-* **Withdrawal Processing & Fees:**
-  * Validates that the requested amount is positive and meets minimum/multiple denomination rules.
-  * Calculates applicable transaction fees (`fee`) and verifies that `withdrawal_amount + fee <= user_balance` before approving the transaction.
-  * Deducts the total amount (withdrawal + fee) from the user's account and reduces the ATM's physical cash pool by the dispensed amount.
-* **Daily Withdrawal Limits:**
-  * Tracks each user's cumulative withdrawals within a 24-hour / daily cycle.
-  * Blocks transactions if `daily_withdrawn + withdrawal_amount > daily_limit`, displaying the remaining daily allowance to the user.
-* **ATM Cash Reserve Check:**
-  * Verifies physical cash availability inside the ATM (`withdrawal_amount <= atm_cash`) prior to dispensing funds.
-  * Prevents partial or failed dispenses by alerting the user if the ATM lacks sufficient cash, without altering their account balance.
--------------------------------------------------------------------------------------------------------------------------------------------------------------------## Member C: Transfers, Transaction History and File Storage
-**Author:** Memmedov Eli (emmemmedov92)
-**Main modules:** `transfer.py`, `history.py`, `datalarjsonlar/`
+## Features and Limits
 
-### What this part does
-Member C's module handles moving money between accounts, recording every operation, and saving all data to files. It works only after the user has logged in through `auth.py`.
+- **Login:** account number + password. **3** wrong attempts block the account for **60 seconds** (saved in JSON, survives restart).
+- **Password change:** current password + new password + confirmation.
+- **Deposit:** amount must be > 0.
+- **Withdrawal:** min `<10>` AZN, multiples of `<10>`, fee `<fee>`, daily limit `<limit>` AZN, must not exceed balance or ATM cash.
+- **Transfer:** receiver must exist and differ from sender; amount > 0 and <= balance. On any error, nothing changes.
+- **History:** deposit, withdrawal, transfer sent/received with type, amount, date and time. Users see only their own.
+- **Storage:** data saved after every successful operation.
 
-### 1. Transfers
-- The logged-in user enters the receiver's account number and the amount.
-- The program checks that the receiver account exists and is not the same as the sender.
-- The amount must be positive and not greater than the sender's balance.
-- If all checks pass, the amount is subtracted from the sender and added to the receiver.
-- If any check fails, an error message is shown and no balance is changed.
+## Structure
 
-### 2. Transaction history
-- Every operation (deposit, withdrawal, transfer sent, transfer received) is recorded with its type, amount, date and time.
-- The user can view the history of their own account only.
-- Transactions are shown in order, so the user can see what happened and when.
+```
+main.py               entry point, menu
+auth.py               login, blocking, password change   (A)
+authentication.py     authentication helpers             (A)
+operations.py         deposit, withdrawal, limits, ATM   (B)
+tests_operations.py   unit tests                         (B)
+transfer.py           transfers                          (C)
+history.py            transaction history                (C)
+datalarjsonlar/bank_data_v1.json   shared data file
+```
 
-### 3. File storage
-- All account data (balances, passwords, block status) and history are saved in JSON files in the `datalarjsonlar/` folder (main file: `bank_data_v1.json`).
-- Data is saved after every successful operation, so nothing is lost when the program is closed.
-- When the program starts, the data is loaded from the file again.
+JSON example (`bank_data_v1.json`):
 
-### Integration with other modules
-- **Member A (authentication):** the account number of the logged-in user from `auth.py` is used as the sender of a transfer and to select whose history is shown.
-- **Member B (ATM operations):** deposits and withdrawals made in `operations.py` are written to the history and saved to the same data file.
-- All modules read and write the same data file (`bank_data_v1.json`), so changes are shared.
+```json
+{
+  "atm_cash": 5000.0,
+  "last_transaction_number": 10,
+  "users": {
+    "user01": {
+      "account_number": "10010001",
+      "password": "Test@123",
+      "balance": 2150.0,
+      "is_blocked": false,
+      "failed_attempts": 0,
+      "lockout_until": null,
+      "deposit_total": 0.0,
+      "withdraw_total": 0.0,
+      "transfer_count": 0,
+      "history": [
+        {
+          "id": "TXN0001",
+          "date_time": "2026-11-11 22:14:29",
+          "type": "Kocurme Gonderildi",
+          "amount": -50.0,
+          "fee": 0,
+          "balance_before": 2500.0,
+          "balance_after": 2450.0,
+          "other_account": "10010002"
+        }
+      ]
+    }
+  }
+}
+```
 
-### What I can explain in the defense
-- How a transfer is validated and how both balances are updated.
-- How each operation is recorded in the history.
-- How data is saved to and loaded from the JSON file.
-- How my module is connected to login (Member A) and ATM operations (Member B).
+History types: `Kocurme Gonderildi` (transfer sent), `Kocurme Alindi` (transfer received), plus deposit and withdrawal records.
+
+## Team
+
+| Member | GitHub | Responsibility |
+|--------|--------|----------------|
+| A – Tahirli Cavidan | MrCeyvd | Login, blocking, 60 s wait, password change |
+| B – Roya Tagizade | @royatagizade07 | Deposit, withdrawal, fee, limits, ATM cash |
+| C – Memmedov Eli | emmemmedov92 | Transfers, history, JSON storage |
+
+## Git Workflow
+
+```
+main
+ └── develop
+      ├── feature/authentication
+      ├── feature/deposits-and-limits
+      ├── feature/withdrawals-and-atm
+      ├── feature/transfers
+      ├── feature/transaction-history
+      ├── feature/file-storage
+      └── bugfix/input-validation
+```
+
+Each feature is built on its own branch from `develop`, merged via Pull Request with a teammate's review. `develop` goes into `main` when stable.
+
+## Test Cases
+
+| Scenario | Expected |
+|----------|----------|
+| Correct login | Menu opens |
+| Wrong password x3 | Blocked 60 s, remaining seconds shown |
+| Login while blocked | Refused, even with correct password |
+| Deposit 0 or negative | Rejected |
+| Withdraw > balance (with fee) | Rejected, balance unchanged |
+| Withdraw over daily limit | Rejected, remaining allowance shown |
+| Withdraw > ATM cash | Rejected, balance unchanged |
+| Transfer to self / unknown account | Rejected |
+| Transfer > balance | Rejected, no change |
+| Restart program | Balances and history preserved |
+
+## Known Limitations
+
+- Passwords stored in plain text (no hashing).
+- No protection against several instances writing the JSON file at once.
+- Console only, single currency.
+- Block time and daily limit depend on the system clock.
