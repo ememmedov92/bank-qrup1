@@ -1,11 +1,11 @@
 {
     "atm_cash": 5000.0,
-    "last_transaction_number": 8,
+    "last_transaction_number": 10,
     "users": {
         "user01": {
             "account_number": "10010001",
             "password": "Test@123",
-            "balance": 2300.0,
+            "balance": 2150.0,
             "is_blocked": false,
             "failed_attempts": 0,
             "lockout_until": null,
@@ -13,10 +13,10 @@
             "deposit_total": 0.0,
             "withdraw_date": "2026-11-10",
             "withdraw_total": 0.0,
-            "transfer_date": "2026-11-11",
+            "transfer_date": "2026-11-13",
             "transfer_count": 0,
             "last_login": null,
-            "last_transaction_time": "2026-11-11 23:26:35",
+            "last_transaction_time": "2026-11-13 08:02:26",
             "history": [
                 {
                     "id": "TXN0001",
@@ -57,14 +57,24 @@
                     "balance_before": 2425.0,
                     "balance_after": 2300.0,
                     "other_account": "10010002"
+                },
+                {
+                    "id": "TXN0009",
+                    "date_time": "2026-11-13 08:02:26",
+                    "type": "Kocurme Gonderildi",
+                    "amount": -150.0,
+                    "fee": 0,
+                    "balance_before": 2300.0,
+                    "balance_after": 2150.0,
+                    "other_account": "10010002"
                 }
             ],
-            "daily_transfer_count": 4
+            "daily_transfer_count": 1
         },
         "user02": {
             "account_number": "10010002",
             "password": "Test@456",
-            "balance": 1700.0,
+            "balance": 1850.0,
             "is_blocked": false,
             "failed_attempts": 0,
             "lockout_until": null,
@@ -75,7 +85,7 @@
             "transfer_date": "2026-11-10",
             "transfer_count": 0,
             "last_login": null,
-            "last_transaction_time": "2026-11-11 23:26:35",
+            "last_transaction_time": "2026-11-13 08:02:26",
             "history": [
                 {
                     "id": "TXN0002",
@@ -115,6 +125,16 @@
                     "fee": 0,
                     "balance_before": 1575.0,
                     "balance_after": 1700.0,
+                    "other_account": "10010001"
+                },
+                {
+                    "id": "TXN0010",
+                    "date_time": "2026-11-13 08:02:26",
+                    "type": "Kocurme Alindi",
+                    "amount": 150.0,
+                    "fee": 0,
+                    "balance_before": 1700.0,
+                    "balance_after": 1850.0,
                     "other_account": "10010001"
                 }
             ]
