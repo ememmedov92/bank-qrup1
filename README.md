@@ -9,7 +9,6 @@ A console-based, multi-user Python banking and ATM management system. It simulat
 Python version and how to run
 
 - **Python version:** 3.14.7
-- 
 
 ```bash
 git clone https://github.com/ememmedov92/bank-qrup1.git
@@ -19,7 +18,7 @@ python main.py
 
 On the first run, if no valid data file exists, default data is created automatically.
 
-## 3. Default demonstration accounts
+Default demonstration accounts
 
 | Username | Default password | Opening balance |
 |----------|------------------|-----------------|
@@ -29,7 +28,7 @@ On the first run, if no valid data file exists, default data is created automati
 
 Each account has a unique account number (e.g. `10010001`). These are demonstration credentials only; no real credentials are stored in this repository.
 
-## 4. Features and exact limits
+Features and exact limits
 
 ### Authentication (Member A)
 - Login with username and password; invalid usernames are handled safely.
@@ -69,7 +68,7 @@ Each account has a unique account number (e.g. `10010001`). These are demonstrat
 ### Calendar-aware daily reset
 Daily deposit, withdrawal and transfer counters are compared with the stored date and reset only when the local calendar date changes, never on program restart.
 
-## 5. File format and project directory structure
+File format and project directory structure
 
 All data is stored in **JSON** (main file: `bank_data_v1.json`). Monetary values are stored as fixed decimals / integer minor units to avoid floating-point errors.
 
@@ -79,8 +78,7 @@ bank-qrup1/
 │   └── bank_data_v1.json    # accounts, ATM cash, history, daily counters
 ├── .gitignore
 ├── README.md
-├── auth.py                  # login, blocking, countdown, password change (Member A)
-├── authentication.py        # authentication helper (Member A) – describe its role
+├── authentication.py        # login, blocking, countdown, password change (Member A
 ├── history.py               # transaction history (Member C)
 ├── main.py                  # entry point and main menu
 ├── operations.py            # deposit, withdrawal, fees, limits, ATM cash (Member B)
@@ -90,11 +88,11 @@ bank-qrup1/
 
 Stored data: username, password hash + salt, account number, balance, active/blocked state, failed attempts, lockout expiry, date-specific deposit/withdrawal totals, daily transfer count, transaction history, last login, last transaction time, shared ATM cash.
 
-## 6. Team members and responsibilities
+Team members and responsibilities
 
 | Member | GitHub | Primary modules | Responsibilities |
 |--------|--------|-----------------|------------------|
-| **Member A — Tahirli Cavidan** | MrCeyvd | `auth.py`, `authentication.py` | Login, failed-attempt tracking, 60-second countdown, account blocking, password change |
+| **Member A — Tahirli Cavidan** | MrCeyvd |`authentication.py` | Login, failed-attempt tracking, 60-second countdown, account blocking, password change |
 | **Member B — (full name)** | @royatagizade07 | `operations.py`, `tests_operations.py` | Balances, deposit limit, withdrawals, commission, ATM reserve, daily limits screen |
 | **Member C — Memmedov Eli** | emmemmedov92 | `transfer.py`, `history.py`, `datalarjsonlar/` | Transfers, 5-transfer daily limit, transaction history, persistence coordination |
 
@@ -106,7 +104,7 @@ Stored data: username, password hash + salt, account number, balance, active/blo
 - `transfer.py` uses the logged-in account as sender and records both sides in the history.
 - All modules read and write the same file, `bank_data_v1.json`, so changes are shared.
 
-## 7. Branch and Pull Request workflow
+Branch and Pull Request workflow
 
 ```
 supermain
@@ -127,34 +125,6 @@ supermain
 - Every substantial feature is merged into `develop` through a **Pull Request reviewed by at least one other member**. After integration tests pass, `develop` is merged into `supermain`.
 - Each member has at least 6 meaningful commits, spread across at least 7 different days.
 
-## 8. Test cases
-
-| # | Scenario | Expected result | Status |
-|---|----------|-----------------|--------|
-| 1 | Correct credentials | Successful login | ☐ |
-| 2 | Three wrong passwords | Visible, persistent 60-second wait | ☐ |
-| 3 | Six total wrong passwords | Account blocked | ☐ |
-| 4 | Correct password on blocked account | Login prohibited | ☐ |
-| 5 | Deposit 200 AZN | User balance and ATM cash increase | ☐ |
-| 6 | 1,800 deposited today; request 300 | Whole deposit rejected; 200 remains | ☐ |
-| 7 | Restart after depositing 1,800 | Daily deposit usage stays 1,800 | ☐ |
-| 8 | Withdrawal exceeds balance | No changes | ☐ |
-| 9 | Withdraw 250 after 400 today | 2% fee on 150 only (3.00 AZN) | ☐ |
-| 10 | Withdraw 100 after 950 today | Whole withdrawal rejected | ☐ |
-| 11 | ATM has 200; request 500 | Rejected | ☐ |
-| 12 | Transfer user01 → user02 | Both balances and histories updated | ☐ |
-| 13 | Sixth outgoing transfer | Rejected | ☐ |
-| 14 | Transfer to unknown account | Friendly error; no changes | ☐ |
-| 15 | Transfer cancelled | No changes | ☐ |
-| 16 | Change password | Only new password works | ☐ |
-| 17 | Restart application | Balances, histories, limits, lockouts persist | ☐ |
-| 18 | Next calendar day | Daily counters reset | ☐ |
-| 19 | Login as a different user | Only that user's data visible | ☐ |
-| 20 | Invalid amount / menu choice | No crash, no balance change | ☐ |
-| 21 | Transfer while ATM is empty | Transfer still succeeds | ☐ |
-| 22 | Feature merged into develop | Reviewed by another member | ☐ |
-
 Known limitations
-- Console-only interface; no GUI.
-- Single-process use only (no concurrent access to the JSON file).
-- Optional extensions not implemented: *(list or write "none")*.
+-Failed login attempts are counted per account.
+-No administrator console (optional feature not implemented). 
