@@ -162,23 +162,3 @@ def change_password(data, name):
     save_data(data)
     print("Password changed successfully.")
 
-
-def main():
-    data = load_data()
-    name = login(data)
-    if name is None:
-        return
-
-    while True:
-        print("\n1. Change Password\n9. Logout\n0. Exit")
-        choice = input("Select an option: ").strip()
-        if choice == "1":
-            change_password(data, name)
-        elif choice == "9" or choice == "0":
-            print("Goodbye!")
-            break
-        else:
-            print("Invalid choice.")
-
-
-main()
